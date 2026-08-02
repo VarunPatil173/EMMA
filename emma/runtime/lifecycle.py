@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from emma.core.logger import get_logger
 from emma.runtime.service_registry import ServiceRegistry
+from emma.runtime.service_state import ServiceState
 
 logger = get_logger(__name__)
 
@@ -22,36 +23,62 @@ class LifecycleManager:
         self._registry = registry
 
     async def initialize(self) -> None:
-        """
-        Initialize every registered service.
-        """
         logger.info("Initializing services...")
 
         for service in self._registry.all():
-            await service.initialize()
+            try:
+                await service.initialize()
+
+            except Exception:
+                service.state = ServiceState.FAILED
+                logger.exception(
+                    f"{service.__class__.__name__} failed during initialization."
+                )
+                raise
 
         logger.info("All services initialized.")
 
     async def start(self) -> None:
-        """
-        Start every registered service.
-        """
         logger.info("Starting services...")
 
-        for service in self._registry.all():
-            await service.start()
+        started_services = []
+
+        try:
+            for service in self._registry.all():
+                await service.start()
+                started_services.append(service)
+
+        except Exception:
+            service.state = ServiceState.FAILED
+
+            logger.exception(
+                f"{service.__class__.__name__} failed during startup."
+            )
+
+            logger.info("Stopping already-started services...")
+
+            for started in reversed(started_services):
+                try:
+                    await started.stop()
+                except Exception:
+                    logger.exception(
+                        f"Failed to stop {started.__class__.__name__}"
+                    )
+
+            raise
 
         logger.info("All services started.")
 
     async def stop(self) -> None:
-        """
-        Stop every registered service.
-        """
-
         logger.info("Stopping services...")
 
-        # Reverse order is safer
         for service in reversed(self._registry.all()):
-            await service.stop()
+            try:
+                await service.stop()
+
+            except Exception:
+                logger.exception(
+                    f"Failed to stop {service.__class__.__name__}"
+                )
 
         logger.info("All services stopped.")

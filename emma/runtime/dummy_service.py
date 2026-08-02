@@ -10,16 +10,21 @@ logger = get_logger(__name__)
 
 
 class DummyService(BaseService):
-    """A simple service for testing the runtime."""
+
+    def __init__(self):
+        super().__init__(
+            name="Dummy Service",
+            description="Runtime validation service."
+        )
 
     async def initialize(self):
         self.state = ServiceState.INITIALIZED
-        logger.info("DummyService initialized.")
+        logger.info(f"{self.name} initialized.")
 
     async def start(self):
         self.state = ServiceState.RUNNING
-        logger.info("DummyService started.")
+        logger.info(f"{self.name} started.")
 
     async def stop(self):
         self.state = ServiceState.STOPPED
-        logger.info("DummyService stopped.")
+        logger.info(f"{self.name} stopped.")

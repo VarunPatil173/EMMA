@@ -1,0 +1,30 @@
+[project]
+name = "emma"
+version = "0.1.0"
+description = "EMMA - Extensible Multimodal Machine Assistant"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Varun Patil" }
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "N",
+    "UP"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

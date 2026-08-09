@@ -28,4 +28,4 @@ class AudioFrame:
     def duration(self) -> float:
         """Return the duration of this audio frame in seconds."""
 
-        return len(self.samples) / self.sample_rate
+        return len(self.samples) /  self.sample_rate

@@ -8,6 +8,7 @@ Author: Varun Patil
 
 import asyncio
 
+from emma.perception.perception_service import PerceptionService
 from emma.runtime.application import Application
 from emma.runtime.dummy_service import DummyService
 
@@ -21,6 +22,7 @@ async def main() -> None:
 
     # Register services
     app.register_service("dummy", DummyService())
+    app.register_service("perception", PerceptionService())
 
     try:
         await app.start()

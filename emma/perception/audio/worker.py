@@ -10,6 +10,8 @@ from emma.core.logger import get_logger
 from emma.perception.audio.recognizer import WhisperRecognizer
 from emma.perception.audio.segmenter import SpeechSegmenter
 from emma.perception.audio.stream import AudioStream
+from emma.perception.input.audio_input import AudioInput
+from emma.perception.engine import PerceptionEngine
 
 
 logger = get_logger(__name__)
@@ -26,10 +28,14 @@ class PerceptionWorker:
         stream: AudioStream,
         segmenter: SpeechSegmenter,
         recognizer: WhisperRecognizer,
+        audio_input: AudioInput,
+        engine: PerceptionEngine,
     ) -> None:
         self.stream = stream
         self.segmenter = segmenter
         self.recognizer = recognizer
+        self.audio_input = audio_input
+        self.engine = engine
 
         self._task: asyncio.Task[None] | None = None
         self._running = False
@@ -72,10 +78,11 @@ class PerceptionWorker:
             )
 
             if transcript.text:
-                logger.info(
-                    "Transcript: %s",
-                    transcript.text,
+                event = self.audio_input.create_event(
+                    transcript.text
                 )
+
+                await self.engine.process(event)
 
     async def stop(self) -> None:
         """Stop the perception pipeline."""

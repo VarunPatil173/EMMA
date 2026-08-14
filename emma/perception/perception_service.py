@@ -12,6 +12,7 @@ from emma.perception.audio.worker import PerceptionWorker
 from emma.perception.engine import PerceptionEngine
 from emma.runtime.base_service import BaseService
 
+
 logger = get_logger(__name__)
 
 
@@ -20,14 +21,15 @@ class PerceptionService(BaseService):
 
     def __init__(
         self,
-        worker: PerceptionWorker,
+        engine: PerceptionEngine,
+        worker: PerceptionWorker | None = None,
     ) -> None:
         super().__init__(
             name="perception",
             description="EMMA multimodal perception service",
         )
 
-        self.engine = worker.engine
+        self.engine = engine
         self.worker = worker
 
     async def initialize(self) -> None:
@@ -36,17 +38,21 @@ class PerceptionService(BaseService):
         logger.info("Initializing Perception Service.")
 
     async def start(self) -> None:
-        """Start the perception engine and worker."""
+        """Start the perception engine and optional worker."""
 
         await self.engine.start()
-        await self.worker.start()
+
+        if self.worker is not None:
+            await self.worker.start()
 
         logger.info("Perception Service started.")
 
     async def stop(self) -> None:
-        """Stop the perception worker and engine."""
+        """Stop the optional worker and perception engine."""
 
-        await self.worker.stop()
+        if self.worker is not None:
+            await self.worker.stop()
+
         await self.engine.stop()
 
         logger.info("Perception Service stopped.")

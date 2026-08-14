@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from emma.core.logger import get_logger
 from emma.perception.shared.input_event import InputEvent
+from emma.perception.input.text_input import TextInput
 
 logger = get_logger(__name__)
 
@@ -60,3 +61,15 @@ class PerceptionEngine:
         )
 
         return event
+
+    async def process_text(self, text: str) -> InputEvent:
+        """
+        Convert text input into an InputEvent
+        and process it through the perception engine.
+        """
+
+        text_input = TextInput()
+
+        event = text_input.create_event(text)
+
+        return await self.process(event)

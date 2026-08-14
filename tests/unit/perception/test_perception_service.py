@@ -1,37 +1,32 @@
 import pytest
 
+from emma.perception.engine import PerceptionEngine
 from emma.perception.perception_service import PerceptionService
-from emma.perception.audio.worker import PerceptionWorker
 
 
 class FakeWorker:
-    def __init__(self):
-        self.engine = FakeEngine()
+    """Fake perception worker for service tests."""
+
+    def __init__(self) -> None:
         self.started = False
         self.stopped = False
 
-    async def start(self):
+    async def start(self) -> None:
         self.started = True
 
-    async def stop(self):
+    async def stop(self) -> None:
         self.stopped = True
-
-
-class FakeEngine:
-    def __init__(self):
-        self._running = False
-
-    async def start(self):
-        self._running = True
-
-    async def stop(self):
-        self._running = False
 
 
 @pytest.mark.anyio
 async def test_perception_service_lifecycle():
+    engine = PerceptionEngine()
     worker = FakeWorker()
-    service = PerceptionService(worker)
+
+    service = PerceptionService(
+        engine=engine,
+        worker=worker,
+    )
 
     assert service.name == "perception"
     assert service.state.value == "CREATED"

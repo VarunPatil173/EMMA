@@ -1,0 +1,33 @@
+"""
+Terminal text interface for EMMA.
+"""
+
+from __future__ import annotations
+
+from emma.perception.engine import PerceptionEngine
+
+
+class TextInterface:
+    """Interactive terminal interface for EMMA."""
+
+    def __init__(self, engine: PerceptionEngine) -> None:
+        self.engine = engine
+
+    async def run(self) -> None:
+        """Run the interactive text loop."""
+
+        print("\nEMMA is ready.")
+        print("Type 'exit' to shut down.\n")
+
+        while True:
+            text = input("You: ").strip()
+
+            if text.lower() in {"exit", "quit"}:
+                break
+
+            if not text:
+                continue
+
+            event = await self.engine.process_text(text)
+
+            print(f"EMMA received: {event.text}\n")

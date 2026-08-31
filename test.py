@@ -1,6 +1,19 @@
-from emma.core.config import settings
+import asyncio
 
-print(settings.app.name)
-print(settings.app.version)
-print(settings.audio.sample_rate)
-print(settings.tts.voice)
+from emma.interface.text_interface import TextInterface
+from emma.perception.engine import PerceptionEngine
+
+
+async def main():
+    engine = PerceptionEngine()
+
+    await engine.start()
+
+    interface = TextInterface(engine)
+
+    await interface.run()
+
+    await engine.stop()
+
+
+asyncio.run(main())

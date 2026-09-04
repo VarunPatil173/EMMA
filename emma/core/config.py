@@ -28,7 +28,7 @@ class LLMSettings(BaseModel):
     """LLM configuration."""
 
     provider: str = "gemini"
-    model: str = "gemini-2.5-pro"
+    model: str = "gemini-2.5-flash"
     api_key: str = ""
 
 
@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        env_nested_delimiter="__",
         extra="ignore",
     )
 

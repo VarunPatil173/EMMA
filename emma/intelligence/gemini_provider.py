@@ -19,18 +19,42 @@ class GeminiProvider(ModelProvider):
     def model(self) -> str:
         return self._model
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+    ) -> str:
+        config = None
+
+        if system_prompt:
+            config = {
+                "system_instruction": system_prompt,
+            }
+
         response = await self._client.aio.models.generate_content(
             model=self._model,
             contents=prompt,
+            config=config,
         )
 
         return response.text or ""
 
-    async def stream(self, prompt: str) -> AsyncIterator[str]:
+    async def stream(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+    ) -> AsyncIterator[str]:
+        config = None
+
+        if system_prompt:
+            config = {
+                "system_instruction": system_prompt,
+            }
+
         response_stream = await self._client.aio.models.generate_content_stream(
             model=self._model,
             contents=prompt,
+            config=config,
         )
 
         async for chunk in response_stream:
@@ -43,6 +67,8 @@ class GeminiProvider(ModelProvider):
                 model=self._model,
                 contents="Reply with OK.",
             )
+
             return bool(response.text)
+
         except Exception:
             return False

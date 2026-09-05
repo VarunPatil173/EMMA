@@ -10,6 +10,8 @@ import asyncio
 
 from emma.intelligence.general_agent import GeneralAgent
 from emma.intelligence.gemini_provider import GeminiProvider
+from emma.intelligence.model_router import ModelRouter
+from emma.intelligence.ollama_provider import OllamaProvider
 from emma.interface.text_interface import TextInterface
 from emma.perception.engine import PerceptionEngine
 from emma.perception.perception_service import PerceptionService
@@ -23,7 +25,14 @@ async def main() -> None:
     app = Application()
 
     # Build intelligence
-    model = GeminiProvider()
+    primary = GeminiProvider()
+    fallback = OllamaProvider("qwen3:8b")
+
+    model = ModelRouter(
+        primary=primary,
+        fallback=fallback,
+    )
+
     agent = GeneralAgent(model)
 
     # Build perception engine
@@ -54,4 +63,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

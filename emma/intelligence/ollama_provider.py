@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 
 from ollama import AsyncClient
 
+from emma.intelligence.conversation import Message
 from emma.intelligence.model import ModelProvider
 
 
@@ -22,6 +23,7 @@ class OllamaProvider(ModelProvider):
         self,
         prompt: str,
         system_prompt: str | None = None,
+        history: list[Message] | None = None,
     ) -> list[dict[str, str]]:
         messages: list[dict[str, str]] = []
 
@@ -32,6 +34,15 @@ class OllamaProvider(ModelProvider):
                     "content": system_prompt,
                 }
             )
+
+        if history:
+            for message in history:
+                messages.append(
+                    {
+                        "role": message.role,
+                        "content": message.content,
+                    }
+                )
 
         messages.append(
             {
@@ -46,12 +57,14 @@ class OllamaProvider(ModelProvider):
         self,
         prompt: str,
         system_prompt: str | None = None,
+        history: list[Message] | None = None,
     ) -> str:
         response = await self._client.chat(
             model=self._model,
             messages=self._build_messages(
-                prompt,
-                system_prompt,
+                prompt=prompt,
+                system_prompt=system_prompt,
+                history=history,
             ),
         )
 
@@ -61,12 +74,14 @@ class OllamaProvider(ModelProvider):
         self,
         prompt: str,
         system_prompt: str | None = None,
+        history: list[Message] | None = None,
     ) -> AsyncIterator[str]:
         response_stream = await self._client.chat(
             model=self._model,
             messages=self._build_messages(
-                prompt,
-                system_prompt,
+                prompt=prompt,
+                system_prompt=system_prompt,
+                history=history,
             ),
             stream=True,
         )

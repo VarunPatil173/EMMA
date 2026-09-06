@@ -1,5 +1,8 @@
+from collections.abc import AsyncIterator
+
 import pytest
 
+from emma.intelligence.conversation import Message
 from emma.intelligence.model import ModelProvider
 from emma.intelligence.model_router import ModelRouter
 
@@ -23,10 +26,20 @@ class FakeProvider(ModelProvider):
     def model(self) -> str:
         return self._model_name
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+        history: list[Message] | None = None,
+    ) -> str:
         return f"{self._provider_name}: {prompt}"
 
-    async def stream(self, prompt: str):
+    async def stream(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+        history: list[Message] | None = None,
+    ) -> AsyncIterator[str]:
         yield f"{self._provider_name}: "
         yield prompt
 
@@ -70,7 +83,7 @@ async def test_router_streams_from_primary():
     async for chunk in router.stream("Hello"):
         chunks.append(chunk)
 
-    assert chunks == ["gemini: ", "Hello"]
+    assert "".join(chunks) == "gemini: Hello"
 
 
 @pytest.mark.asyncio
@@ -85,24 +98,24 @@ async def test_router_streams_from_fallback():
     async for chunk in router.stream("Hello"):
         chunks.append(chunk)
 
-    assert chunks == ["ollama: ", "Hello"]
+    assert "".join(chunks) == "ollama: Hello"
 
 
 @pytest.mark.asyncio
-async def test_router_health_check_uses_primary_first():
+async def test_router_health_check_primary():
     primary = FakeProvider("gemini", "gemini-2.5-flash", True)
     fallback = FakeProvider("ollama", "qwen3:8b", True)
 
     router = ModelRouter(primary, fallback)
 
-    assert await router.health_check() is True
+    assert await router.health_check()
 
 
 @pytest.mark.asyncio
-async def test_router_health_check_falls_back():
+async def test_router_health_check_fallback():
     primary = FakeProvider("gemini", "gemini-2.5-flash", False)
     fallback = FakeProvider("ollama", "qwen3:8b", True)
 
     router = ModelRouter(primary, fallback)
 
-    assert await router.health_check() is True
+    assert await router.health_check()

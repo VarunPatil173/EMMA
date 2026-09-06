@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 
+from emma.intelligence.conversation import Message
+
 
 class ModelProvider(ABC):
     @property
@@ -18,6 +20,7 @@ class ModelProvider(ABC):
         self,
         prompt: str,
         system_prompt: str | None = None,
+        history: list[Message] | None = None,
     ) -> str:
         raise NotImplementedError
 
@@ -26,6 +29,7 @@ class ModelProvider(ABC):
         self,
         prompt: str,
         system_prompt: str | None = None,
+        history: list[Message] | None = None,
     ) -> AsyncIterator[str]:
         raise NotImplementedError
 

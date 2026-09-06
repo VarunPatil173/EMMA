@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 
+from emma.intelligence.conversation import Message
 from emma.intelligence.model import ModelProvider
 
 
@@ -22,19 +23,46 @@ class ModelRouter(ModelProvider):
     def model(self) -> str:
         return self._primary.model
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+        history: list[Message] | None = None,
+    ) -> str:
         if await self._primary.health_check():
-            return await self._primary.generate(prompt)
+            return await self._primary.generate(
+                prompt,
+                system_prompt=system_prompt,
+                history=history,
+            )
 
-        return await self._fallback.generate(prompt)
+        return await self._fallback.generate(
+            prompt,
+            system_prompt=system_prompt,
+            history=history,
+        )
 
-    async def stream(self, prompt: str) -> AsyncIterator[str]:
+    async def stream(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+        history: list[Message] | None = None,
+    ) -> AsyncIterator[str]:
         if await self._primary.health_check():
-            async for chunk in self._primary.stream(prompt):
+            async for chunk in self._primary.stream(
+                prompt,
+                system_prompt=system_prompt,
+                history=history,
+            ):
                 yield chunk
+
             return
 
-        async for chunk in self._fallback.stream(prompt):
+        async for chunk in self._fallback.stream(
+            prompt,
+            system_prompt=system_prompt,
+            history=history,
+        ):
             yield chunk
 
     async def health_check(self) -> bool:

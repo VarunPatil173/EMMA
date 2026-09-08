@@ -7,7 +7,7 @@ Author: Varun Patil
 """
 
 import asyncio
-
+from emma.core.config import settings
 from emma.intelligence.general_agent import GeneralAgent
 from emma.intelligence.gemini_provider import GeminiProvider
 from emma.intelligence.model_router import ModelRouter
@@ -17,6 +17,8 @@ from emma.perception.engine import PerceptionEngine
 from emma.perception.perception_service import PerceptionService
 from emma.runtime.application import Application
 from emma.runtime.dummy_service import DummyService
+from emma.memory.memory_manager import MemoryManager
+from emma.memory.sqlite_store import SQLiteMemoryStore
 
 
 async def main() -> None:
@@ -33,7 +35,16 @@ async def main() -> None:
         fallback=fallback,
     )
 
-    agent = GeneralAgent(model)
+    memory_store = SQLiteMemoryStore(
+        settings.database.sqlite_path
+    )
+
+    memory_manager = MemoryManager(memory_store)
+
+    agent = GeneralAgent(
+        model,
+        memory_manager=memory_manager,
+    )
 
     # Build perception engine
     engine = PerceptionEngine()

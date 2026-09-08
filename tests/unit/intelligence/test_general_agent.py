@@ -4,6 +4,7 @@ from emma.intelligence.conversation import Message
 from emma.intelligence.general_agent import GeneralAgent
 from emma.intelligence.model import ModelProvider
 from emma.perception.shared.input_event import InputEvent
+from emma.memory.memory_manager import MemoryManager
 
 
 class FakeModel(ModelProvider):
@@ -179,3 +180,89 @@ async def test_general_agent_can_clear_conversation():
     agent.clear_conversation()
 
     assert agent.get_conversation() == []
+
+class FakeMemoryStore:
+    def __init__(self) -> None:
+        self.memories = []
+
+    def save(self, memory) -> None:
+        self.memories.append(memory)
+
+    def get_all(self):
+        return list(self.memories)
+
+    def delete_all(self) -> None:
+        self.memories.clear()
+
+
+@pytest.mark.asyncio
+async def test_general_agent_saves_explicit_memory():
+    store = FakeMemoryStore()
+    memory_manager = MemoryManager(store)
+
+    agent = GeneralAgent(
+        FakeModel(),
+        memory_manager=memory_manager,
+    )
+
+    event = InputEvent(
+        source="text",
+        text="Remember that I like robotics.",
+    )
+
+    response = await agent.run(event)
+
+    assert response == "I'll remember that, sir."
+
+    memories = memory_manager.recall()
+
+    assert len(memories) == 1
+    assert memories[0].content == "I like robotics."
+
+
+@pytest.mark.asyncio
+async def test_general_agent_does_not_save_normal_message():
+    store = FakeMemoryStore()
+    memory_manager = MemoryManager(store)
+
+    agent = GeneralAgent(
+        FakeModel(),
+        memory_manager=memory_manager,
+    )
+
+    event = InputEvent(
+        source="text",
+        text="I like robotics.",
+    )
+
+    await agent.run(event)
+
+    assert memory_manager.recall() == []
+
+
+@pytest.mark.asyncio
+async def test_general_agent_stream_saves_explicit_memory():
+    store = FakeMemoryStore()
+    memory_manager = MemoryManager(store)
+
+    agent = GeneralAgent(
+        FakeModel(),
+        memory_manager=memory_manager,
+    )
+
+    event = InputEvent(
+        source="text",
+        text="Remember that I love engineering.",
+    )
+
+    chunks = []
+
+    async for chunk in agent.stream(event):
+        chunks.append(chunk)
+
+    assert "".join(chunks) == "I'll remember that, sir."
+
+    memories = memory_manager.recall()
+
+    assert len(memories) == 1
+    assert memories[0].content == "I love engineering."

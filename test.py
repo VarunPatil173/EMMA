@@ -1,19 +1,11 @@
-import asyncio
+import math
 
-from emma.interface.text_interface import TextInterface
-from emma.perception.engine import PerceptionEngine
+# Input: length of the pendulum (in meters)
+length = float(input("Enter length of pendulum (m): "))
+gravity = 9.81  # Standard gravity (m/s²)
 
+# Calculate time period
+time_period = 2 * math.pi * math.sqrt(length / gravity)
 
-async def main():
-    engine = PerceptionEngine()
-
-    await engine.start()
-
-    interface = TextInterface(engine)
-
-    await interface.run()
-
-    await engine.stop()
-
-
-asyncio.run(main())
+# Output result
+print(f"Time period: {time_period:.4f} seconds")

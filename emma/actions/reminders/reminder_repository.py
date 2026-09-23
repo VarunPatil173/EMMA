@@ -144,6 +144,31 @@ class ReminderRepository:
                 """,
                 (reminder_id,),
             )
+    def get_due(self, current_time: datetime) -> list[Reminder]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    id,
+                    title,
+                    scheduled_at,
+                    status,
+                    created_at
+                FROM reminders
+                WHERE status = ?
+                AND scheduled_at <= ?
+                ORDER BY scheduled_at ASC
+                """,
+                (
+                    ReminderStatus.PENDING.value,
+                    current_time.isoformat(),
+                ),
+            ).fetchall()
+
+        return [
+            self._row_to_reminder(row)
+            for row in rows
+        ]
 
     @staticmethod
     def _row_to_reminder(row: tuple) -> Reminder:

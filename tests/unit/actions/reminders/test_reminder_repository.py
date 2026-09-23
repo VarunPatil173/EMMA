@@ -97,3 +97,35 @@ def test_reminder_can_be_deleted(tmp_path):
     repository.delete(saved.id)
 
     assert repository.get(saved.id) is None
+
+def test_get_due_returns_pending_past_reminders(tmp_path):
+    database_path = tmp_path / "emma.db"
+
+    repository = ReminderRepository(str(database_path))
+
+    due = repository.save(
+        Reminder(
+            id=None,
+            title="Study Physics",
+            scheduled_at=datetime(2026, 9, 23, 14, 0),
+            status=ReminderStatus.PENDING,
+            created_at=datetime(2026, 9, 23, 10, 0),
+        )
+    )
+
+    future = repository.save(
+        Reminder(
+            id=None,
+            title="Study SQL",
+            scheduled_at=datetime(2026, 9, 23, 20, 0),
+            status=ReminderStatus.PENDING,
+            created_at=datetime(2026, 9, 23, 10, 0),
+        )
+    )
+
+    reminders = repository.get_due(
+        datetime(2026, 9, 23, 15, 0)
+    )
+
+    assert reminders == [due]
+    assert future not in reminders
